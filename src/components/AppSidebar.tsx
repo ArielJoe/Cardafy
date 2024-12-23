@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Sidebar,
   SidebarContent,
@@ -11,23 +13,90 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Separator } from "./ui/separator";
-import { LogOut } from "lucide-react";
-import { Button } from "./ui/button";
+import { Gem, Info, ShoppingCart } from "lucide-react";
 import { useWallet } from "@meshsdk/react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "./ui/sheet";
+import { useEffect, useState } from "react";
+import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 
 const links = [
-  { id: 0, title: "Membership", url: "" },
+  { id: 0, title: "Membership", url: "", icon: <Gem size={20} /> },
   {
     id: 1,
+    title: "Silver",
+    url: "/membership/silver",
+    icon: <span className="p-2 bg-[#c4c4c4] rounded-full" />,
+  },
+  {
+    id: 2,
     title: "Gold",
     url: "/membership/gold",
+    icon: <span className="p-2 bg-[#efbf04] rounded-full" />,
   },
-  { id: 2, title: "Silver", url: "/membership/silver" },
-  { id: 3, title: "Platinum", url: "/membership/platinum" },
+  {
+    id: 3,
+    title: "Platinum",
+    url: "/membership/platinum",
+    icon: <span className="p-2 bg-[#d9d9d9] rounded-full" />,
+  },
+  { id: 4, title: "Cart", url: "/membership/cart", icon: <ShoppingCart /> },
 ];
 
 export default function AppSidebar() {
   const pathname = usePathname();
+  const { wallet, connect, disconnect } = useWallet();
+  const [adaBalance, setAdaBalance] = useState(0);
+  const [walletAddress, setWalletAddress] = useState("");
+  const [hasGold, setHasGold] = useState(false);
+  const [hasSilver, setHasSilver] = useState(false);
+  const [hasPlatinum, setHasPlatinum] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    const fetchWalletData = async () => {
+      const selectedWalletString = localStorage.getItem("selectedWallet");
+      if (selectedWalletString) {
+        const selectedWallet = JSON.parse(selectedWalletString);
+        await connect(selectedWallet.name);
+
+        if (wallet) {
+          try {
+            const addr = await wallet.getChangeAddress();
+            setWalletAddress(addr);
+            const lovelace = await wallet.getLovelace();
+            setAdaBalance(parseInt(lovelace) / 1000000);
+          } catch (error) {
+            console.log(error);
+          }
+        }
+      }
+    };
+
+    fetchWalletData();
+  }, [connect, wallet]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setHasGold(localStorage.getItem("hasGold") === "true");
+      setHasSilver(localStorage.getItem("hasSilver") === "true");
+      setHasPlatinum(localStorage.getItem("hasPlatinum") === "true");
+    }
+  }, []);
+
+  const handleDisconnect = () => {
+    localStorage.removeItem("selectedWallet");
+    localStorage.removeItem("hasGold");
+    localStorage.removeItem("hasSilver");
+    localStorage.removeItem("hasPlatinum");
+    disconnect();
+  };
 
   return (
     <Sidebar>
@@ -40,21 +109,34 @@ export default function AppSidebar() {
             <SidebarMenu className="py-4">
               <Separator className="light:bg-black dark:bg-white" />
               <div className="py-4">
-                {links.map((link) => (
-                  <Link
-                    className={cn(
-                      pathname === link.url
-                        ? "text-primary bg-primary/10 rounded-md"
-                        : "text-muted-foreground hover:text-foreground",
-                      link.id !== 0 ? "ml-8 w-auto" : null,
-                      "flex items-center gap-3 rounded-lg p-3 transition-all hover:text-primary text-base"
-                    )}
-                    key={link.id}
-                    href={link.url}
-                  >
-                    {link.title}
-                  </Link>
-                ))}
+                {links.map((link) => {
+                  if (
+                    (link.title === "Gold" && !hasGold) ||
+                    (link.title === "Silver" && !hasSilver) ||
+                    (link.title === "Platinum" && !hasPlatinum)
+                  ) {
+                    return null;
+                  }
+
+                  return (
+                    <Link
+                      className={cn(
+                        pathname === link.url
+                          ? "text-primary bg-primary/10 rounded-md"
+                          : "text-muted-foreground hover:text-foreground",
+                        link.id !== 0 && link.id != 4
+                          ? "ml-8 mr-2 w-auto"
+                          : null,
+                        "flex items-center gap-3 rounded-lg p-3 transition-all hover:text-primary text-lg"
+                      )}
+                      key={link.id}
+                      href={link.url}
+                    >
+                      {link.icon}
+                      {link.title}
+                    </Link>
+                  );
+                })}
               </div>
             </SidebarMenu>
           </SidebarGroupContent>
@@ -62,11 +144,46 @@ export default function AppSidebar() {
       </SidebarContent>
       <SidebarFooter className="dark:bg-[#020817] light:bg-white">
         <div className="p-2">
-          <Link href={"/login"}>
-            <Button className="border bg-transparent">
-              <LogOut className="dark:text-white light:text-[#020817]" />
+          <div className="flex justify-end gap-3 w-full">
+            <Button
+              className="flex-grow h-10 text-white"
+              onClick={() => {
+                handleDisconnect();
+                router.push("/login");
+              }}
+            >
+              Sign out
             </Button>
-          </Link>
+            <Sheet>
+              <SheetTrigger>
+                <div className="border bg-transparent rounded-md p-2 w-10 h-10 flex justify-center items-center">
+                  <Info className="text-black dark:text-white" width={25} />
+                </div>
+              </SheetTrigger>
+              <SheetContent>
+                <SheetHeader>
+                  <SheetTitle className="text-2xl font-bold border-b pb-3">
+                    Wallet Info
+                  </SheetTitle>
+                  <div>
+                    <div>
+                      <p>Wallet Address :</p>
+                      <div className="break-words overflow-wrap relative w-full">
+                        <p className="whitespace-normal">{walletAddress}</p>
+                      </div>
+                    </div>
+                    <Separator className="bg-white my-3" />
+                    <div>
+                      <p>Balance :</p>
+                      <p>
+                        <span className="font-bold">₳</span> {adaBalance}
+                      </p>
+                    </div>
+                  </div>
+                </SheetHeader>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
       </SidebarFooter>
     </Sidebar>

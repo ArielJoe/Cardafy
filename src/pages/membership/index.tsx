@@ -5,6 +5,12 @@ export default function MembershipPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.push("/membership/gold");
+    if (localStorage.getItem("hasSilver")) {
+      router.push("/membership/silver");
+    } else if (localStorage.getItem("hasGold")) {
+      router.push("/membership/gold");
+    } else if (localStorage.getItem("hasPlatinum")) {
+      router.push("/membership/Platinum");
+    }
   }, []);
 }

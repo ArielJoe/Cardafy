@@ -84,6 +84,23 @@
   }
 }
 
+/* WebKit Browsers */
+::-webkit-scrollbar {
+  width: 12px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-primary;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-primary/50;
+}
+
 @keyframes float {
   0%,
   100% {
@@ -98,21 +115,10 @@
   animation: float 3s ease-in-out infinite;
 }
 
-@keyframes spin {
-  0% {
-    transform: rotate(60deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
-}
-
-.spin {
-  animation: spin 1s ease-in-out;
-}
-
 .image-container {
-  transition: border 0.3s ease, transform 0.3s ease;
+  transition:
+    border 0.3s ease,
+    transform 0.3s ease;
 }
 
 .image-container:hover {

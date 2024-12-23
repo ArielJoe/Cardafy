@@ -5,33 +5,62 @@ import { getToken } from "@/lib/getToken";
 import { useWallet } from "@meshsdk/react";
 import router from "next/router";
 import MembershipLayout from "../layout";
+import { urlFor } from "@/lib/sanity";
+import { itemCard } from "@/lib/interface";
+import Image from "next/image";
+import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import Navbar from "@/components/Navbar";
+import { getItemsData } from "@/lib/itemsData";
 
 export default function Gold() {
   const { wallet, connected } = useWallet();
   const [hasGold, setHasGold] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [loadingItems, setLoadingItems] = useState(true);
+  const [items, setItems] = useState<itemCard[]>([]);
 
   useEffect(() => {
-    const storedHasGold = localStorage.getItem("hasGold");
-    if (storedHasGold) {
-      setHasGold(JSON.parse(storedHasGold));
-      setLoading(false);
-    } else {
-      fetchAndValidateAssets();
-    }
+    const fetchData = async () => {
+      const storedHasGold = localStorage.getItem("hasGold");
+      if (storedHasGold) {
+        setHasGold(JSON.parse(storedHasGold));
+        setLoadingUser(false);
+      } else {
+        await fetchAndValidateAssets();
+      }
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
-    if (!loading && !hasGold) {
+    if (!loadingUser && !hasGold) {
       router.push("/login");
     }
-  }, [loading, hasGold]);
+  }, [loadingUser, hasGold]);
+
+  useEffect(() => {
+    const fetchItemsData = async () => {
+      try {
+        const itemsData = await getItemsData();
+        setItems(itemsData);
+      } catch (error) {
+        console.log(error);
+      } finally {
+        setLoadingItems(false);
+      }
+    };
+
+    fetchItemsData();
+  }, []);
 
   const fetchAndValidateAssets = async () => {
     if (connected) {
       await fetchAssets();
     } else {
-      setLoading(false);
+      setLoadingUser(false);
     }
   };
 
@@ -45,13 +74,13 @@ export default function Gold() {
       setHasGold(hasGoldStatus);
       localStorage.setItem("hasGold", JSON.stringify(hasGoldStatus));
     } catch (error) {
-      console.error("Error fetching assets:", error);
+      console.log(error);
     } finally {
-      setLoading(false);
+      setLoadingUser(false);
     }
   };
 
-  if (loading) {
+  if (loadingUser) {
     return (
       <div className="flex justify-center items-center h-screen">
         <p>Verifying...</p>
@@ -59,13 +88,72 @@ export default function Gold() {
     );
   }
 
+  if (!hasGold) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>You don't have access to this page.</p>
+      </div>
+    );
+  }
+
+  const goldItems = items.filter((item) => item.membership === "Gold");
+
   return (
-    hasGold && (
-      <MembershipLayout>
-        <div className="px-10">
-          <h1>Gold</h1>
+    <MembershipLayout>
+      <div>
+        <Navbar title="Gold Membership" />
+        <div className="py-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          {!loadingItems ? (
+            goldItems.length > 0 ? (
+              goldItems.map((item, idx) => (
+                <div
+                  key={idx}
+                  className="border rounded-md p-4 flex flex-col justify-between"
+                >
+                  <div className="flex flex-col items-center">
+                    <Image
+                      src={urlFor(item.image).url()}
+                      alt={item.image}
+                      width={150}
+                      height={150}
+                      className="p-2"
+                    />
+                    <div className="grid gap-2 text-center">
+                      <h1 className="text-xl font-bold line-clamp-2">
+                        {item.title}
+                      </h1>
+                      <p className="text-base line-clamp-3">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid gap-2 text-center">
+                    <p>
+                      <span className="font-bold">₳</span> {item.price}
+                    </p>
+                    <Button className="p-0">
+                      <Link
+                        href={`gold/${item.slug}`}
+                        className="text-white flex justify-center items-center w-full h-full"
+                      >
+                        See Details
+                      </Link>
+                    </Button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="flex justify-center items-center h-full">
+                <p className="text-lg">No items found.</p>
+              </div>
+            )
+          ) : (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="animate-spin" />
+            </div>
+          )}
         </div>
-      </MembershipLayout>
-    )
+      </div>
+    </MembershipLayout>
   );
 }

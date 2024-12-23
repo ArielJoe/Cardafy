@@ -10,14 +10,14 @@ export default function MembershipLayout({
 }) {
   return (
     <div>
-      <div className="absolute top-5 right-5">
+      <div className="fixed bottom-5 right-5">
         <ModeToggle />
       </div>
       <SidebarProvider>
         <AppSidebar />
         <main>
           <SidebarTrigger />
-          {children}
+          <div className="mx-8 mt-1 mb-8">{children}</div>
         </main>
       </SidebarProvider>
     </div>

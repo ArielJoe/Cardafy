@@ -26,7 +26,7 @@ export default function Home() {
       </div>
       <div className="h-screen flex items-center justify-center p-4">
         <div>
-          <div className="flex gap-20 items-center">
+          <div className="flex gap-5 sm:gap-20 items-center p-4">
             <ItemsCarousel />
             <div className="flex flex-col gap-5">
               <h1 className="font-bold text-5xl">Cardafy</h1>
@@ -63,7 +63,7 @@ export default function Home() {
         onClick={scrollToBenefits}
         className="absolute bottom-10 left-1/2 transform -translate-x-1/2 py-2 px-4 rounded-full shadow-lg transition border text-white"
       >
-        <ChevronDown className="float" />
+        <ChevronDown className="float text-black dark:text-white" />
       </button>
       <div ref={benefitsRef}>
         <Benefits />
