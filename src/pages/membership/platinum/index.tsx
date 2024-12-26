@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import { getItemsData } from "@/lib/itemsData";
+import Verifying from "@/components/Verifying";
+import NoAccess from "@/components/NoAccess";
 
 export default function Platinum() {
   const { wallet, connected } = useWallet();
@@ -81,19 +83,11 @@ export default function Platinum() {
   };
 
   if (loadingUser) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p>Verifying...</p>
-      </div>
-    );
+    return <Verifying />;
   }
 
   if (!hasPlatinum) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <p>You don't have access to this page.</p>
-      </div>
-    );
+    return <NoAccess />;
   }
 
   const platinumItems = items.filter((item) => item.membership === "Platinum");

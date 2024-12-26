@@ -21,8 +21,8 @@ export default function AccordionSection() {
         <Accordion type="single" collapsible>
           {faq.map((item, index) => (
             <AccordionItem key={index} value={`item-${index}`}>
-              <AccordionTrigger>{item[0]}</AccordionTrigger>
-              <AccordionContent>{item[1]}</AccordionContent>
+              <AccordionTrigger className="text-lg">{item[0]}</AccordionTrigger>
+              <AccordionContent className="text-lg">{item[1]}</AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>

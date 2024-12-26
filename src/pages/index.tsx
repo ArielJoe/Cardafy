@@ -1,17 +1,52 @@
+"use client";
+
 import AnimatedGridPattern from "@/components/ui/animated-grid-pattern";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
-import ShimmerButton from "@/components/ui/shimmer-button";
 import ItemsCarousel from "@/components/Carousel";
 import AccordionSection from "@/components/Accordion";
 import { ModeToggle } from "@/components/ui/ModeToggle";
 import Benefits from "@/components/Benefits";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { RainbowButton } from "@/components/ui/rainbow-button";
+import Chatbot from "../components/Chatbot";
+import PulsatingButton from "@/components/ui/pulsating-button";
+import { useWallet } from "@meshsdk/react";
+import Link from "next/link";
+
+const merchantAddr = process.env.NEXT_PUBLIC_MERCHANT_ADDRESS;
 
 export default function Home() {
   const router = useRouter();
   const benefitsRef = useRef<HTMLDivElement>(null);
+  const { wallet, connect } = useWallet();
+  const [role, setRole] = useState("");
+
+  useEffect(() => {
+    const fetchWalletData = async () => {
+      const selectedWalletString = localStorage.getItem("selectedWallet");
+      if (selectedWalletString) {
+        const selectedWallet = JSON.parse(selectedWalletString);
+        await connect(selectedWallet.name);
+
+        if (wallet) {
+          try {
+            const addr = await wallet.getChangeAddress();
+            if (addr !== merchantAddr) {
+              setRole("customer");
+            } else {
+              setRole("merchant");
+            }
+          } catch (error) {
+            console.log(error);
+          }
+        }
+      }
+    };
+
+    fetchWalletData();
+  }, [connect, wallet]);
 
   const scrollToBenefits = () => {
     if (benefitsRef.current) {
@@ -19,33 +54,50 @@ export default function Home() {
     }
   };
 
+  function pulsatingButton(text: string, href: string) {
+    return (
+      <Link href={href}>
+        <PulsatingButton pulseColor="white">
+          <p className="text-white font-semibold">{text}</p>
+        </PulsatingButton>
+      </Link>
+    );
+  }
+
   return (
     <div>
-      <div className="absolute top-5 left-5">
+      <div className="fixed top-5 left-5">
         <ModeToggle />
       </div>
+      <div className="fixed bottom-5 right-5">
+        <Chatbot />
+      </div>
+      <div className="fixed top-5 right-5">
+        {role === "customer"
+          ? pulsatingButton("Continue buying", "/membership")
+          : role === "merchant"
+            ? pulsatingButton("See orders", "/merchant")
+            : null}
+      </div>
+
       <div className="h-screen flex items-center justify-center p-4">
-        <div>
-          <div className="flex gap-5 sm:gap-20 items-center p-4">
-            <ItemsCarousel />
-            <div className="flex flex-col gap-5">
-              <h1 className="font-bold text-5xl">Cardafy</h1>
-              <p className="text-xl">
-                Secure Transactions with Smart Contracts.
-              </p>
-              <ShimmerButton
-                className="w-fit"
-                onClick={() => {
-                  if (localStorage.getItem("selectedWallet") !== null) {
-                    router.push("/membership");
-                  } else {
-                    router.push("/login");
-                  }
-                }}
-              >
-                <span className="text-white">Shop Now</span>
-              </ShimmerButton>
-            </div>
+        <div className="flex gap-5 sm:gap-20 items-center p-4">
+          <ItemsCarousel />
+          <div className="flex flex-col gap-5">
+            <h1 className="font-bold text-5xl text-primary">Cardafy</h1>
+            <p className="text-xl">Secure Transactions with Smart Contracts.</p>
+            <RainbowButton
+              className="w-fit rounded-full z-[1]"
+              onClick={() => {
+                if (localStorage.getItem("selectedWallet") !== null) {
+                  router.push("/membership");
+                } else {
+                  router.push("/login");
+                }
+              }}
+            >
+              <span className="font-bold">Shop Now</span>
+            </RainbowButton>
           </div>
         </div>
         <AnimatedGridPattern
@@ -55,7 +107,7 @@ export default function Home() {
           repeatDelay={1}
           className={cn(
             "[mask-image:radial-gradient(500px_circle_at_center,white,transparent)]",
-            "absolute inset-0 skew-y-12 z-[-1]"
+            "absolute inset-0 skew-y-12 z-[-2]"
           )}
         />
       </div>

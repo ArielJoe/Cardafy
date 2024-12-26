@@ -15,7 +15,7 @@ export default function Benefits() {
         <div className="flex flex-col items-center gap-2">
           <TickDouble03Icon className="w-12 h-12 text-primary" />
           <p className="text-2xl font-bold text-center">
-            Original
+            Official
             <br />
             Cardano Merch
           </p>

@@ -16,7 +16,7 @@ interface Wallet {
 const gold = getToken().gold;
 const silver = getToken().silver;
 const platinum = getToken().platinum;
-const policyID = getToken().policyID;
+const merchantAddr = process.env.NEXT_PUBLIC_MERCHANT_ADDRESS;
 
 const ConnectWallet = () => {
   const { toast } = useToast();
@@ -27,33 +27,72 @@ const ConnectWallet = () => {
     { assetName: "", fingerPrint: "", policyId: "", quantity: "", unit: "" },
   ]);
   const [loadingNft, setLoadingNft] = useState(false);
+  const [loadingWallet, setLoadingWallet] = useState(false);
+  const [isMerchant, setIsMerchant] = useState(false);
 
   useEffect(() => {
-    clearStates();
-    const storedWallet = localStorage.getItem("selectedWallet");
-    if (storedWallet) {
-      const parsedWallet: Wallet = JSON.parse(storedWallet);
-      setSelectedWallet(parsedWallet);
-      connect(parsedWallet.name);
-    }
-  }, [connected]);
+    const fetchWalletData = async () => {
+      clearStates();
+      setLoadingWallet(true);
+      const storedWallet = localStorage.getItem("selectedWallet");
+      if (storedWallet) {
+        const parsedWallet: Wallet = JSON.parse(storedWallet);
+        setSelectedWallet(parsedWallet);
+        await connect(parsedWallet.name);
+      }
+      setLoadingWallet(false);
+    };
+
+    fetchWalletData();
+  }, []);
 
   useEffect(() => {
-    if (wallet) {
-      checkNftCredentials();
-    }
-  }, [wallet]);
+    const checkMerchantStatus = async () => {
+      if (wallet && connected) {
+        try {
+          const addr = await wallet.getChangeAddress();
+          if (addr === merchantAddr) {
+            setIsMerchant(true);
+            toast({
+              className: "bg-primary font-semibold",
+              description: `Welcome, Merchant!`,
+            });
+            return true;
+          }
+          return false;
+        } catch (error) {
+          console.log(error);
+          return false;
+        }
+      }
+      return false;
+    };
+
+    const init = async () => {
+      if (wallet && connected && !loadingWallet) {
+        const isMerchantWallet = await checkMerchantStatus();
+        if (!isMerchantWallet) {
+          checkNftCredentials();
+        }
+      }
+    };
+
+    init();
+  }, [wallet, connected, loadingWallet]);
 
   function clearStates() {
     setAssetsList([
       { assetName: "", fingerPrint: "", policyId: "", quantity: "", unit: "" },
     ]);
+    setIsMerchant(false);
   }
 
   async function checkNftCredentials() {
+    if (isMerchant) return;
+
     setLoadingNft(true);
     try {
-      if (wallet && localStorage.getItem("selectedWallet")) {
+      if (wallet) {
         const _assets = await wallet.getAssets();
         console.log("ASSETS:", _assets);
 
@@ -129,6 +168,7 @@ const ConnectWallet = () => {
     localStorage.removeItem("hasPlatinum");
     disconnect();
     setSelectedWallet(null);
+    clearStates();
     toast({
       description: `Signed out`,
     });
@@ -146,7 +186,7 @@ const ConnectWallet = () => {
   }
 
   return (
-    <>
+    <div>
       <div>
         {selectedWallet && !connecting ? (
           <div className="grid gap-3">
@@ -155,6 +195,15 @@ const ConnectWallet = () => {
                 <Loader2 className="size-4 mr-2 animate-spin" />
                 <p>Getting available NFTs...</p>
               </div>
+            ) : isMerchant ? (
+              <button
+                className="p-2 w-full rounded-sm bg-primary"
+                onClick={() => {
+                  router.push("/merchant");
+                }}
+              >
+                <p className="text-white">Sign in as Merchant</p>
+              </button>
             ) : (
               assetsList.map((asset, index) => (
                 <div key={index}>
@@ -188,7 +237,7 @@ const ConnectWallet = () => {
               ))
             )}
             <button
-              className="border-primary border rounded-sm hover:bg-primary p-1"
+              className="border border-red-500 rounded-sm hover:bg-red-500 p-1"
               onClick={handleDisconnect}
             >
               Sign out
@@ -197,12 +246,12 @@ const ConnectWallet = () => {
         ) : wallets.length > 0 ? (
           <p className="text-center">Please select your available wallets :</p>
         ) : (
-          <p className="text-center">No wallet detected</p>
+          <p className="text-center">No wallet detected.</p>
         )}
       </div>
       <div className="flex justify-center">
         {!selectedWallet && !connecting && (
-          <ul className="flex gap-3">
+          <ul className="flex gap-3 mt-3">
             {wallets.map((w) => (
               <li
                 key={w.name}
@@ -220,7 +269,7 @@ const ConnectWallet = () => {
           </ul>
         )}
       </div>
-    </>
+    </div>
   );
 };
 

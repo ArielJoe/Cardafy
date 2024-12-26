@@ -1,3 +1,4 @@
+import Verifying from "@/components/Verifying";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -11,6 +12,10 @@ export default function MembershipPage() {
       router.push("/membership/gold");
     } else if (localStorage.getItem("hasPlatinum")) {
       router.push("/membership/Platinum");
+    } else {
+      router.push("/login");
     }
   }, []);
+
+  return <Verifying />;
 }

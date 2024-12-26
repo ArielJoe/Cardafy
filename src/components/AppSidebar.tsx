@@ -54,6 +54,7 @@ export default function AppSidebar() {
   const { wallet, connect, disconnect } = useWallet();
   const [adaBalance, setAdaBalance] = useState(0);
   const [walletAddress, setWalletAddress] = useState("");
+  const [network, setNetwork] = useState("");
   const [hasGold, setHasGold] = useState(false);
   const [hasSilver, setHasSilver] = useState(false);
   const [hasPlatinum, setHasPlatinum] = useState(false);
@@ -72,6 +73,10 @@ export default function AppSidebar() {
             setWalletAddress(addr);
             const lovelace = await wallet.getLovelace();
             setAdaBalance(parseInt(lovelace) / 1000000);
+            const net = await wallet.getNetworkId();
+            setNetwork(
+              net === 1 ? "Mainnet" : net === 0 ? "Testnet" : "Offline"
+            );
           } catch (error) {
             console.log(error);
           }
@@ -102,7 +107,7 @@ export default function AppSidebar() {
     <Sidebar>
       <SidebarContent className="dark:bg-[#020817] light:bg-white">
         <SidebarGroup>
-          <SidebarGroupLabel className="w-full text-black text-3xl font-bold light:text-black dark:text-white">
+          <SidebarGroupLabel className="w-full mt-2 text-black text-3xl font-bold light:text-black dark:text-white">
             <Link href={"/"}>Cardafy</Link>
           </SidebarGroupLabel>
           <SidebarGroupContent>
@@ -145,15 +150,15 @@ export default function AppSidebar() {
       <SidebarFooter className="dark:bg-[#020817] light:bg-white">
         <div className="p-2">
           <div className="flex justify-end gap-3 w-full">
-            <Button
-              className="flex-grow h-10 text-white"
+            <button
+              className="border border-red-500 rounded-sm hover:bg-red-500 p-1 flex-grow h-10"
               onClick={() => {
                 handleDisconnect();
                 router.push("/login");
               }}
             >
               Sign out
-            </Button>
+            </button>
             <Sheet>
               <SheetTrigger>
                 <div className="border bg-transparent rounded-md p-2 w-10 h-10 flex justify-center items-center">
@@ -162,22 +167,33 @@ export default function AppSidebar() {
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
-                  <SheetTitle className="text-2xl font-bold border-b pb-3">
+                  <SheetTitle className="text-3xl font-bold">
                     Wallet Info
                   </SheetTitle>
                   <div>
-                    <div>
-                      <p>Wallet Address :</p>
-                      <div className="break-words overflow-wrap relative w-full">
-                        <p className="whitespace-normal">{walletAddress}</p>
+                    <div className="border-t pt-3">
+                      <div className="pb-3">
+                        <p>Wallet Address :</p>
+                        <div className="break-words overflow-wrap relative w-full">
+                          <p className="whitespace-normal">{walletAddress}</p>
+                        </div>
                       </div>
                     </div>
-                    <Separator className="bg-white my-3" />
-                    <div>
-                      <p>Balance :</p>
-                      <p>
-                        <span className="font-bold">₳</span> {adaBalance}
-                      </p>
+                    <div className="border-t pt-3">
+                      <div className="pb-3">
+                        <p>Network :</p>
+                        <p>
+                          <p>{network}</p>
+                        </p>
+                      </div>
+                    </div>
+                    <div className="border-t pt-3">
+                      <div className="pb-3">
+                        <p>Balance :</p>
+                        <p>
+                          <span className="font-bold">₳</span> {adaBalance}
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </SheetHeader>

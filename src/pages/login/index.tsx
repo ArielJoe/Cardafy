@@ -24,7 +24,7 @@ export default function Login() {
         >
           <House className="text-white" />
         </Button>
-        <div className="grid gap-3 border border-primary p-4 rounded-md">
+        <div className="grid gap-3 border p-4 rounded-md">
           <h1 className="text-3xl text-center border-b border-white pb-3">
             Welcome to <span className="font-bold">Cardafy</span>!
           </h1>

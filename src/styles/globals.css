@@ -37,6 +37,11 @@
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --color-1: 0 100% 63%;
+    --color-2: 270 100% 63%;
+    --color-3: 210 100% 63%;
+    --color-4: 195 100% 63%;
+    --color-5: 90 100% 63%;
   }
 
   .dark {
@@ -72,6 +77,11 @@
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+    --color-1: 0 100% 63%;
+    --color-2: 270 100% 63%;
+    --color-3: 210 100% 63%;
+    --color-4: 195 100% 63%;
+    --color-5: 90 100% 63%;
   }
 }
 
@@ -84,21 +94,28 @@
   }
 }
 
-/* WebKit Browsers */
+/* Default scrollbar styles for light mode */
 ::-webkit-scrollbar {
-  width: 12px;
+  width: 12px; /* Width of the scrollbar */
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-transparent;
+  background: white; /* Background color of the scrollbar track in light mode */
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary;
+  background: black; /* Color of the scrollbar thumb in light mode */
 }
 
-::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary/50;
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-track {
+    background: black; /* Background color of the scrollbar track in dark mode */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: white; /* Color of the scrollbar thumb in dark mode */
+  }
 }
 
 @keyframes float {
