@@ -151,7 +151,7 @@ export default function AppSidebar() {
         <div className="p-2">
           <div className="flex justify-end gap-3 w-full">
             <button
-              className="border border-red-500 rounded-sm hover:bg-red-500 p-1 flex-grow h-10"
+              className="border border-red-500 rounded-sm hover:bg-red-500 hover:text-white p-1 flex-grow h-10"
               onClick={() => {
                 handleDisconnect();
                 router.push("/login");

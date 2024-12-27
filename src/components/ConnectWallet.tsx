@@ -237,7 +237,7 @@ const ConnectWallet = () => {
               ))
             )}
             <button
-              className="border border-red-500 rounded-sm hover:bg-red-500 p-1"
+              className="border border-red-500 rounded-sm hover:bg-red-500 hover:text-white p-1"
               onClick={handleDisconnect}
             >
               Sign out

@@ -13,7 +13,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { Button } from "@/components/ui/button";
-import { ChevronUp, ChevronDown, LogIn, House } from "lucide-react";
+import { ChevronUp, ChevronDown, LogIn, SlidersHorizontal } from "lucide-react";
 
 const merchantAddr = process.env.NEXT_PUBLIC_MERCHANT_ADDRESS;
 
@@ -92,39 +92,44 @@ export default function Merchant() {
       <div className="fixed bottom-5 right-5">
         <HoverCard openDelay={0} onOpenChange={setIsHovered}>
           <HoverCardTrigger asChild>
-            <Button variant="outline" className="h-14 w-14 rounded-full">
+            <Button
+              variant="outline"
+              className="size-14 rounded-full light:border-black dark:border-white"
+            >
               {isHovered ? (
-                <ChevronUp strokeWidth={3} />
+                <ChevronUp strokeWidth={2} />
               ) : (
-                <ChevronDown strokeWidth={3} />
+                <ChevronDown strokeWidth={2} />
               )}
             </Button>
           </HoverCardTrigger>
-          <HoverCardContent className="w-auto p-2 border-none mb-2">
+          <HoverCardContent className="w-auto p-2 border-none">
             <div className="flex flex-col items-center gap-3">
               <Button
                 variant="outline"
                 size="icon"
-                className="h-12 w-12 rounded-full"
-                onClick={handleHomeClick}
+                className="size-14 rounded-full light:border-black dark:border-white"
+                onClick={handleLogOutClick}
               >
-                <House />
+                <LogIn strokeWidth={2} />
               </Button>
               <Button
                 variant="outline"
                 size="icon"
-                className="h-12 w-12 rounded-full"
-                onClick={handleLogOutClick}
+                className="size-14 rounded-full light:border-black dark:border-white"
+                onClick={() => {
+                  router.push("/merchant/studio");
+                }}
               >
-                <LogIn />
+                <SlidersHorizontal strokeWidth={2} />
               </Button>
-              <ModeToggle />
             </div>
           </HoverCardContent>
         </HoverCard>
       </div>
-      <div className="m-8 pb-4 border-b">
+      <div className="m-8 pb-4 border-b flex justify-between">
         <Navbar title="Orders" />
+        <ModeToggle />
       </div>
     </div>
   );

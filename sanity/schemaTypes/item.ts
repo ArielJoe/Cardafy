@@ -3,7 +3,18 @@ export default {
   type: 'document',
   title: 'Item',
   fields: [
-    {name: 'membership', type: 'string', title: 'Membership'},
+    {
+      name: 'membership',
+      type: 'string',
+      title: 'Membership',
+      options: {
+        list: [
+          {title: 'Gold', value: 'Gold'},
+          {title: 'Silver', value: 'Silver'},
+          {title: 'Platinum', value: 'Platinum'},
+        ],
+      },
+    },
     {
       name: 'title',
       type: 'string',
@@ -12,7 +23,7 @@ export default {
     {
       name: 'slug',
       type: 'slug',
-      title: 'Slug of your item article',
+      title: 'Slug of your item',
       options: {
         source: 'title',
       },

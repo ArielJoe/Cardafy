@@ -14,12 +14,7 @@ const montserrat = Montserrat({
 
 function App({ Component, pageProps }: AppProps) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem
-      disableTransitionOnChange
-    >
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <MeshProvider>
         <main className={montserrat.className}>
           <Head>

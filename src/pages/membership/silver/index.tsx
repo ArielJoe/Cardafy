@@ -137,14 +137,15 @@ export default function Silver() {
                 </div>
               ))
             ) : (
-              <div className="flex justify-center items-center h-full">
-                <p className="text-lg">No items found.</p>
-              </div>
+              <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl font-bold">
+                No Items Found
+              </p>
             )
           ) : (
-            <div className="flex justify-center items-center h-full">
-              <Loader2 className="animate-spin" />
-            </div>
+            <Loader2
+              className="animate-spin absolute top-1/2 left-1/2"
+              size={40}
+            />
           )}
         </div>
       </div>

@@ -67,6 +67,7 @@ export default function GoldItem() {
             width={250}
             height={250}
             alt={slugData.title}
+            className="my-4"
           />
         </div>
 
@@ -74,6 +75,7 @@ export default function GoldItem() {
           <div className="prose-blue prose-lg dark:prose-invert prose-li:marker:text-primary prose-a:text-primary">
             <PortableText value={slugData.content} />
           </div>
+          <p className="font-bold">Qty :</p>
           <div className="flex gap-4 items-center">
             <div className="flex items-center gap-2">
               <Button
