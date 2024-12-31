@@ -23,8 +23,15 @@ import {
   SheetTrigger,
 } from "./ui/sheet";
 import { useEffect, useState } from "react";
-import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
+import {
+  getHasGold,
+  getHasPlatinum,
+  getHasSilver,
+  getWallet,
+  logout,
+} from "@/lib/auth";
+import { getCartByAddress } from "@/lib/cart";
 
 const links = [
   { id: 0, title: "Membership", url: "", icon: <Gem size={20} /> },
@@ -58,16 +65,17 @@ export default function AppSidebar() {
   const [hasGold, setHasGold] = useState(false);
   const [hasSilver, setHasSilver] = useState(false);
   const [hasPlatinum, setHasPlatinum] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     const fetchWalletData = async () => {
-      const selectedWalletString = localStorage.getItem("selectedWallet");
+      const selectedWalletString = getWallet();
       if (selectedWalletString) {
         const selectedWallet = JSON.parse(selectedWalletString);
         await connect(selectedWallet.name);
 
-        if (wallet) {
+        if (wallet && walletAddress === "") {
           try {
             const addr = await wallet.getChangeAddress();
             setWalletAddress(addr);
@@ -77,6 +85,8 @@ export default function AppSidebar() {
             setNetwork(
               net === 1 ? "Mainnet" : net === 0 ? "Testnet" : "Offline"
             );
+            const items = await getCartByAddress(addr);
+            setCartCount(items.length);
           } catch (error) {
             console.log(error);
           }
@@ -85,21 +95,20 @@ export default function AppSidebar() {
     };
 
     fetchWalletData();
-  }, [connect, wallet]);
+  }, [wallet]);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setHasGold(localStorage.getItem("hasGold") === "true");
-      setHasSilver(localStorage.getItem("hasSilver") === "true");
-      setHasPlatinum(localStorage.getItem("hasPlatinum") === "true");
-    }
-  }, []);
+    const fetchMembershipStatus = () => {
+      setHasGold(getHasGold());
+      setHasSilver(getHasSilver());
+      setHasPlatinum(getHasPlatinum());
+    };
+
+    fetchMembershipStatus();
+  }, [wallet]);
 
   const handleDisconnect = () => {
-    localStorage.removeItem("selectedWallet");
-    localStorage.removeItem("hasGold");
-    localStorage.removeItem("hasSilver");
-    localStorage.removeItem("hasPlatinum");
+    logout();
     disconnect();
   };
 
@@ -127,7 +136,7 @@ export default function AppSidebar() {
                     <Link
                       className={cn(
                         pathname === link.url
-                          ? "text-primary bg-primary/10 rounded-md"
+                          ? "text-primary bg-primary/10 rounded-md font-semibold"
                           : "text-muted-foreground hover:text-foreground",
                         link.id !== 0 && link.id != 4
                           ? "ml-8 mr-2 w-auto"
@@ -137,7 +146,14 @@ export default function AppSidebar() {
                       key={link.id}
                       href={link.url}
                     >
-                      {link.icon}
+                      {link.icon}{" "}
+                      {link.id === 4 ? (
+                        <span className="absolute right-5 text-white text-sm size-8 bg-primary rounded-full flex items-center justify-center">
+                          {cartCount}
+                        </span>
+                      ) : (
+                        ""
+                      )}
                       {link.title}
                     </Link>
                   );
@@ -161,14 +177,14 @@ export default function AppSidebar() {
             </button>
             <Sheet>
               <SheetTrigger>
-                <div className="border bg-transparent rounded-md p-2 w-10 h-10 flex justify-center items-center">
-                  <Info className="text-black dark:text-white" width={25} />
+                <div className="border bg-transparent hover:bg-primary hover:text-white rounded-md p-2 w-10 h-10 flex justify-center items-center">
+                  <Info width={25} />
                 </div>
               </SheetTrigger>
               <SheetContent>
                 <SheetHeader>
                   <SheetTitle className="text-3xl font-bold">
-                    Wallet Info
+                    Wallet Details
                   </SheetTitle>
                   <div>
                     <div className="border-t pt-3">
@@ -182,16 +198,15 @@ export default function AppSidebar() {
                     <div className="border-t pt-3">
                       <div className="pb-3">
                         <p>Network :</p>
-                        <p>
-                          <p>{network}</p>
-                        </p>
+                        <p>{network}</p>
                       </div>
                     </div>
                     <div className="border-t pt-3">
                       <div className="pb-3">
                         <p>Balance :</p>
                         <p>
-                          <span className="font-bold">₳</span> {adaBalance}
+                          <span className="font-bold">₳</span>&nbsp;&nbsp;
+                          {adaBalance}
                         </p>
                       </div>
                     </div>

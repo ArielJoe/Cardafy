@@ -79,7 +79,7 @@ test scenario_2() {
   )
 }
 
-// Skenario_2 : Pesan atau isi Redeemer valid dan transaksi disetujui user
+// Skenario_3 : Pesan atau isi Redeemer valid dan transaksi disetujui user
 test scenario_3() {
   let datum =
     Datum { owner: #"00000000000000000000000000000000000000000000000000000000" }

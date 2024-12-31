@@ -7,6 +7,14 @@ import { useToast } from "@/hooks/use-toast";
 import router from "next/router";
 import { getToken } from "@/lib/getToken";
 import { Loader2 } from "lucide-react";
+import {
+  getWallet,
+  logout,
+  setHasGold,
+  setHasPlatinum,
+  setHasSilver,
+  setWallet,
+} from "@/lib/auth";
 
 interface Wallet {
   name: string;
@@ -34,7 +42,7 @@ const ConnectWallet = () => {
     const fetchWalletData = async () => {
       clearStates();
       setLoadingWallet(true);
-      const storedWallet = localStorage.getItem("selectedWallet");
+      const storedWallet = getWallet();
       if (storedWallet) {
         const parsedWallet: Wallet = JSON.parse(storedWallet);
         setSelectedWallet(parsedWallet);
@@ -54,7 +62,7 @@ const ConnectWallet = () => {
           if (addr === merchantAddr) {
             setIsMerchant(true);
             toast({
-              className: "bg-primary font-semibold",
+              className: "bg-primary font-semibold text-white",
               description: `Welcome, Merchant!`,
             });
             return true;
@@ -130,15 +138,15 @@ const ConnectWallet = () => {
           let description = "Memberships you can use: ";
           if (memberships.gold) {
             description += "Gold\n";
-            localStorage.setItem("hasGold", "true");
+            setHasGold();
           }
           if (memberships.platinum) {
             description += "Platinum\n";
-            localStorage.setItem("hasPlatinum", "true");
+            setHasPlatinum();
           }
           if (memberships.silver) {
             description += "Silver\n";
-            localStorage.setItem("hasSilver", "true");
+            setHasSilver();
           }
 
           toast({
@@ -156,18 +164,15 @@ const ConnectWallet = () => {
   }
 
   const handleWalletSelection = (wallet: Wallet) => {
-    localStorage.setItem("selectedWallet", JSON.stringify(wallet));
+    setWallet(wallet);
     setSelectedWallet(wallet);
     connect(wallet.name);
   };
 
   const handleDisconnect = () => {
-    localStorage.removeItem("selectedWallet");
-    localStorage.removeItem("hasGold");
-    localStorage.removeItem("hasSilver");
-    localStorage.removeItem("hasPlatinum");
-    disconnect();
     setSelectedWallet(null);
+    logout();
+    disconnect();
     clearStates();
     toast({
       description: `Signed out`,
@@ -209,7 +214,7 @@ const ConnectWallet = () => {
                 <div key={index}>
                   {asset && (
                     <button
-                      className={`p-2 w-full rounded-sm ${
+                      className={`p-2 w-full rounded-sm font-semibold ${
                         asset.assetName === silver
                           ? "bg-[#c4c4c4]"
                           : asset.assetName === gold
@@ -246,7 +251,7 @@ const ConnectWallet = () => {
         ) : wallets.length > 0 ? (
           <p className="text-center">Please select your available wallets :</p>
         ) : (
-          <p className="text-center">No wallet detected.</p>
+          <p className="text-center">No Wallet Detected</p>
         )}
       </div>
       <div className="flex justify-center">

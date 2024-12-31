@@ -1,8 +1,15 @@
-export function getToken() {
-  const gold = process.env.NEXT_PUBLIC_TOKEN_GOLD;
-  const silver = process.env.NEXT_PUBLIC_TOKEN_SILVER;
-  const platinum = process.env.NEXT_PUBLIC_TOKEN_PLATINUM;
-  const policyID = process.env.NEXT_PUBLIC_POLICY_ID;
+interface Token {
+  gold: string | undefined;
+  silver: string | undefined;
+  platinum: string | undefined;
+  policyID: string | undefined;
+}
 
-  return { gold, silver, platinum, policyID };
+export function getToken(): Token {
+  return {
+    gold: process.env.NEXT_PUBLIC_TOKEN_GOLD,
+    silver: process.env.NEXT_PUBLIC_TOKEN_SILVER,
+    platinum: process.env.NEXT_PUBLIC_TOKEN_PLATINUM,
+    policyID: process.env.NEXT_PUBLIC_POLICY_ID,
+  };
 }

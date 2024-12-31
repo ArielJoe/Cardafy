@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/hover-card";
 
 const items = [
-  "/items/Black Around The Clock.webp",
+  "/items/Block Around The Clock.webp",
   "/items/Cardano Cap.webp",
   "/items/Genesis T-Shirt.webp",
   "/items/Cardano Mug.webp",

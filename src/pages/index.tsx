@@ -3,10 +3,10 @@
 import AnimatedGridPattern from "@/components/ui/animated-grid-pattern";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
-import ItemsCarousel from "@/components/Carousel";
-import AccordionSection from "@/components/Accordion";
+import ItemsCarousel from "@/components/home/Carousel";
+import AccordionSection from "@/components/home/Accordion";
 import { ModeToggle } from "@/components/ui/ModeToggle";
-import Benefits from "@/components/Benefits";
+import Benefits from "@/components/home/Benefits";
 import { useEffect, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { RainbowButton } from "@/components/ui/rainbow-button";
@@ -14,6 +14,7 @@ import Chatbot from "../components/Chatbot";
 import PulsatingButton from "@/components/ui/pulsating-button";
 import { useWallet } from "@meshsdk/react";
 import Link from "next/link";
+import { getWallet } from "@/lib/auth";
 
 const merchantAddr = process.env.NEXT_PUBLIC_MERCHANT_ADDRESS;
 
@@ -25,7 +26,7 @@ export default function Home() {
 
   useEffect(() => {
     const fetchWalletData = async () => {
-      const selectedWalletString = localStorage.getItem("selectedWallet");
+      const selectedWalletString = getWallet();
       if (selectedWalletString) {
         const selectedWallet = JSON.parse(selectedWalletString);
         await connect(selectedWallet.name);
@@ -89,7 +90,7 @@ export default function Home() {
             <RainbowButton
               className="w-fit rounded-full z-[1]"
               onClick={() => {
-                if (localStorage.getItem("selectedWallet") !== null) {
+                if (getWallet() !== null) {
                   router.push("/membership");
                 } else {
                   router.push("/login");

@@ -9,8 +9,11 @@ export interface itemCard {
 }
 
 export interface fullItemPage {
+  _id: string;
   slug: string;
   title: string;
+  membership: string;
+  price: number;
   content: any;
   image: any;
 }

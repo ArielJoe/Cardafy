@@ -1,4 +1,5 @@
-import Verifying from "@/components/Verifying";
+import Verifying from "@/components/state/Verifying";
+import { getHasGold, getHasPlatinum, getHasSilver } from "@/lib/auth";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -6,12 +7,12 @@ export default function MembershipPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (localStorage.getItem("hasSilver")) {
-      router.push("/membership/silver");
-    } else if (localStorage.getItem("hasGold")) {
+    if (getHasGold()) {
       router.push("/membership/gold");
-    } else if (localStorage.getItem("hasPlatinum")) {
-      router.push("/membership/Platinum");
+    } else if (getHasPlatinum()) {
+      router.push("/membership/platinum");
+    } else if (getHasSilver()) {
+      router.push("/membership/silver");
     } else {
       router.push("/login");
     }

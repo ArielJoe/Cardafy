@@ -1,4 +1,4 @@
-import ConnectWallet from "@/components/ConnectWallet";
+import ConnectWallet from "@/components/login/ConnectWallet";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ui/ModeToggle";
 import { useWallet } from "@meshsdk/react";

@@ -141,3 +141,10 @@
 .image-container:hover {
   transform: scale(1.1);
 }
+
+/* .jodit_theme_custom {
+  --jd-color-background-default: #ffffff;
+  --jd-color-border: #044406;
+  --jd-color-panel: #9bffe1;
+  --jd-color-icon: #044406;
+} */

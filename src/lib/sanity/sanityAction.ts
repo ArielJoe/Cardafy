@@ -1,3 +1,4 @@
+import { PortableTextBlock } from "next-sanity";
 import { client } from "./sanity";
 
 export interface Item {
@@ -21,6 +22,11 @@ export interface Item {
 
 export type NewItem = Omit<Item, "_id">;
 
+export interface Content {
+  _id: string;
+  content: PortableTextBlock[];
+}
+
 export async function deleteItem(itemId: string) {
   await client.delete(itemId);
 }
@@ -42,6 +48,15 @@ export async function fetchItems() {
   const query = '*[_type == "item"]';
   const items = await client.fetch(query);
   return items;
+}
+
+export async function fetchContentById(id: string) {
+  const query = `*[_type == "item" && _id == "${id}"] {
+                    content,
+                }`;
+  const params = { id };
+  const contents = await client.fetch(query, params);
+  return contents[0];
 }
 
 export async function uploadFile(file: File) {

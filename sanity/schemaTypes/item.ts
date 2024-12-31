@@ -12,6 +12,7 @@ export default {
           {title: 'Gold', value: 'Gold'},
           {title: 'Silver', value: 'Silver'},
           {title: 'Platinum', value: 'Platinum'},
+          {title: 'Archive', value: 'Archive'},
         ],
       },
     },

@@ -19,7 +19,7 @@ export default function MembershipLayout({
       </div>
       <SidebarProvider>
         <AppSidebar />
-        <main>
+        <main className="w-full">
           <SidebarTrigger />
           <div className="mx-8 mt-1 mb-8">{children}</div>
         </main>
