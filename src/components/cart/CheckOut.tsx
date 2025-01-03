@@ -12,6 +12,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
+import {
+  BlockfrostProvider,
+  deserializeAddress,
+  serializePlutusScript,
+  mConStr0,
+  MeshTxBuilder,
+  Asset,
+} from "@meshsdk/core";
+import { applyParamsToScript } from "@meshsdk/core-csl";
+import contractBlueprint from "../../../aiken-workspace/plutus.json";
+import { useWallet } from "@meshsdk/react";
+import { toast } from "@/hooks/use-toast";
 
 interface CheckOutProps {
   walletAddress: string;
@@ -24,10 +36,98 @@ interface FormErrors {
   address?: string;
 }
 
-const CheckOut: React.FC<CheckOutProps> = ({ walletAddress, qty, price }) => {
+const blockfrostApiKey = process.env.NEXT_PUBLIC_BLOCKFROST_API_KEY;
+const nodeProvider = new BlockfrostProvider(blockfrostApiKey!);
+
+const CheckOut: React.FC<CheckOutProps> = ({ qty, price }) => {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { wallet } = useWallet();
+
+  function getScript(
+    blueprintCompiledCode: string,
+    params: string[] = [],
+    version: "V1" | "V2" | "V3" = "V3"
+  ) {
+    const scriptCbor = applyParamsToScript(blueprintCompiledCode, params);
+    const scriptAddr = serializePlutusScript(
+      { code: scriptCbor, version: version },
+      undefined,
+      0
+    ).address;
+    return { scriptCbor, scriptAddr };
+  }
+
+  async function getWalletInfo() {
+    const utxos = await wallet.getUtxos();
+    const collateral = (await wallet.getCollateral())[0];
+    const walletAddress = await wallet.getChangeAddress();
+    return { utxos, collateral, walletAddress };
+  }
+
+  async function txHandler(
+    e: React.FormEvent,
+    price: number,
+    quantity: number
+  ) {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      const { scriptAddr } = getScript(
+        contractBlueprint.validators[0].compiledCode
+      );
+      const { utxos, walletAddress } = await getWalletInfo();
+      const signerHash = deserializeAddress(walletAddress).pubKeyHash;
+      const lovelaceAmount = ((price * quantity + 20) * 1000000).toString();
+      const assets: Asset[] = [{ unit: "lovelace", quantity: lovelaceAmount }];
+
+      const txBuild = new MeshTxBuilder({
+        fetcher: nodeProvider,
+        evaluator: nodeProvider,
+        verbose: true,
+      });
+
+      const txDraft = await txBuild
+        .setNetwork("preprod")
+        .txOut(scriptAddr, assets)
+        .txOutDatumHashValue(mConStr0([signerHash]))
+        .changeAddress(walletAddress)
+        .selectUtxosFrom(utxos)
+        .complete();
+
+      const signedTx = await wallet.signTx(txDraft);
+      const txHash = await wallet.submitTx(signedTx);
+
+      toast({
+        title: "Transaction Success",
+        description: (
+          <div className="flex flex-col">
+            <span>Transaction Hash:</span>
+            <span className="break-all text-sm mt-1">{txHash}</span>
+          </div>
+        ),
+        className: "bg-green-900 text-white",
+      });
+
+      setIsDialogOpen(false);
+      setName("");
+      setAddress("");
+      return;
+    } catch (error) {
+      toast({
+        title: "Transaction Failed",
+        description: `${error}`,
+        variant: "destructive",
+      });
+      return;
+    }
+  }
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
@@ -47,24 +147,8 @@ const CheckOut: React.FC<CheckOutProps> = ({ walletAddress, qty, price }) => {
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
-
-    console.log("Checkout successful:", {
-      walletAddress,
-      qty,
-      price,
-      name,
-      address,
-    });
-  };
-
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button className="font-semibold text-white">Buy</Button>
       </DialogTrigger>
@@ -73,7 +157,7 @@ const CheckOut: React.FC<CheckOutProps> = ({ walletAddress, qty, price }) => {
           <DialogTitle className="text-3xl">Checkout</DialogTitle>
           <DialogDescription>Fill in the informations below!</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="grid gap-4">
+        <form onSubmit={(e) => txHandler(e, price, qty)} className="grid gap-4">
           <div className="grid grid-cols-4 gap-4">
             <div className="text-right self-start pt-2">
               <Label htmlFor="name">Name</Label>

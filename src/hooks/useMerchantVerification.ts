@@ -47,7 +47,7 @@ export const useMerchantVerification = () => {
           router.push("/");
         }
       } catch (error) {
-        console.error("Merchant verification error:", error);
+        console.log(error);
       } finally {
         setLoading(false);
       }

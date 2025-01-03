@@ -53,7 +53,7 @@ export default function useItemManagement() {
         const itemsData = await fetchItems();
         setItems(itemsData);
       } catch (error) {
-        console.error(error);
+        console.log(error);
         toast({
           variant: "destructive",
           description: "Failed to fetch items",
@@ -105,7 +105,7 @@ export default function useItemManagement() {
         image: null,
       });
     } catch (error) {
-      console.error(error);
+      console.log(error);
       toast({
         variant: "destructive",
         description: `Failed to add item ${newItem.title}`,
@@ -126,7 +126,7 @@ export default function useItemManagement() {
         description: `${item.title} deleted successfully`,
       });
     } catch (error) {
-      console.error(error);
+      console.log(error);
       toast({
         className: "bg-red-900",
         description: `Failed to delete item ${item.title}`,
@@ -169,7 +169,7 @@ export default function useItemManagement() {
             },
           };
         } catch (error) {
-          console.error(error);
+          console.log(error);
           toast({
             variant: "destructive",
             description: `Failed to upload new image for ${editingItem.title}`,
@@ -190,7 +190,7 @@ export default function useItemManagement() {
           description: `${editingItem.title} updated successfully`,
         });
       } catch (error) {
-        console.error(error);
+        console.log(error);
         toast({
           variant: "destructive",
           description: `Failed to update ${editingItem.title}`,

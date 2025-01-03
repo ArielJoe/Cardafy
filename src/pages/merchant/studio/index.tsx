@@ -55,7 +55,6 @@ const JoditEditor = dynamic(() => import("jodit-react"), { ssr: false });
 
 export default function Studio() {
   const router = useRouter();
-  const { toast } = useToast();
   const {
     loading,
     membershipFilter,
@@ -152,14 +151,13 @@ export default function Studio() {
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {loading && !editingItem ? (
-            <Loader2
-              className="animate-spin fixed top-1/2 left-1/2"
-              size={40}
-            />
+            <div className="col-span-full flex justify-center items-center">
+              <Loader2 className="animate-spin" size={40} />
+            </div>
           ) : currentItems.length === 0 ? (
-            <p className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xl">
-              No Items Found
-            </p>
+            <div className="col-span-full flex justify-center items-center">
+              <p className="text-xl">No Items Found</p>
+            </div>
           ) : (
             currentItems.map((item) => (
               <div
@@ -423,9 +421,8 @@ export default function Studio() {
         </div>
         <div className="fixed left-5 bottom-5">
           <Button
-            variant="outline"
             size="icon"
-            className="size-14 rounded-full light:border-black dark:border-white"
+            className="size-14 rounded-full bg-black text-white dark:bg-white dark:text-black dark:hover:bg-black dark:hover:text-white"
             onClick={() => {
               router.push("/merchant");
             }}
@@ -437,9 +434,8 @@ export default function Studio() {
           <Dialog>
             <DialogTrigger asChild>
               <Button
-                variant="outline"
                 size="icon"
-                className="size-14 rounded-full light:border-black dark:border-white bg-primary text-white"
+                className="size-14 rounded-full bg-primary text-white hover:bg-white hover:text-primary"
               >
                 <Plus strokeWidth={2} className="scale-150" />
               </Button>

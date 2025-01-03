@@ -1,6 +1,6 @@
 "use client";
 
-import ItemDetail from "@/components/ItemDetail";
+import ItemDetail from "@/components/dashboard/ItemDetail";
 import MembershipVerification from "@/components/validator/MembershipVerification";
 import NoAccess from "@/components/state/NoAccess";
 import { useState } from "react";

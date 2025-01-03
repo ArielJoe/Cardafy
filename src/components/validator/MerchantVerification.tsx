@@ -10,7 +10,7 @@ interface MerchantVerificationProps {
 export const MerchantVerification = ({
   children,
 }: MerchantVerificationProps) => {
-  const { loading, isMerchant, walletConnected } = useMerchantVerification();
+  const { loading, isMerchant } = useMerchantVerification();
 
   if (loading) {
     return <Verifying />;

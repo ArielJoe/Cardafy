@@ -7,11 +7,11 @@ import { deleteCartById, getCartByAddress } from "@/lib/cart";
 import { getWallet } from "@/lib/auth";
 import { useWallet } from "@meshsdk/react";
 import { CartData } from "@/lib/cart";
-import CartImage from "@/components/CartImage";
+import CartImage from "@/components/cart/CartImage";
 import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import CheckOut from "@/components/CheckOut";
+import CheckOut from "@/components/cart/CheckOut";
 import { toast } from "@/hooks/use-toast";
 
 export default function Cart() {
@@ -28,7 +28,11 @@ export default function Cart() {
           const selectedWallet = JSON.parse(selectedWalletString);
           await connect(selectedWallet.name);
 
-          if (wallet && walletAddress === "") {
+          if (
+            wallet &&
+            typeof wallet.getChangeAddress === "function" &&
+            walletAddress === ""
+          ) {
             const addr = await wallet.getChangeAddress();
             setWalletAddress(addr);
           }
@@ -39,7 +43,7 @@ export default function Cart() {
     };
 
     fetchWalletData();
-  }, [wallet, walletAddress]);
+  }, [wallet, connect]);
 
   useEffect(() => {
     const getCart = async () => {
@@ -103,7 +107,7 @@ export default function Cart() {
                     <h2 className="font-semibold text-2xl text-clip overflow-clip">
                       {data.title}
                     </h2>
-                    <p>Price: ₳&nbsp;&nbsp;{data.price}</p>
+                    <p>Price: ₳&nbsp;{data.price}</p>
                     <p>Quantity: {data.qty}</p>
                   </div>
                   <div className="flex gap-4 justify-center">

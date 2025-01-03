@@ -16,8 +16,8 @@ pub type Redeemer {
   msg: ByteArray,
 }
 
-// Validator hello_world merupakan fungsi utama
-validator hello_world {
+// Validator marketplace merupakan fungsi utama
+validator marketplace {
   // Fungsi spend memvalidasi dua kondisi : 
   // redeemer harus "17925" dan harus menggunakan Pub Key Hash dari wallet address penerima dana
   spend(
@@ -57,7 +57,7 @@ test scenario_1() {
     Datum { owner: #"00000000000000000000000000000000000000000000000000000000" }
   let redeemer = Redeemer { msg: "Aiken Rocks!" }
   let placeholder_utxo = OutputReference { transaction_id: "", output_index: 0 }
-  hello_world.spend(
+  marketplace.spend(
     Some(datum),
     redeemer,
     placeholder_utxo,
@@ -71,7 +71,7 @@ test scenario_2() {
     Datum { owner: #"00000000000000000000000000000000000000000000000000000000" }
   let redeemer = Redeemer { msg: "17925" }
   let placeholder_utxo = OutputReference { transaction_id: "", output_index: 0 }
-  hello_world.spend(
+  marketplace.spend(
     Some(datum),
     redeemer,
     placeholder_utxo,
@@ -79,13 +79,13 @@ test scenario_2() {
   )
 }
 
-// Skenario_3 : Pesan atau isi Redeemer valid dan transaksi disetujui user
+// Skenario_2 : Pesan atau isi Redeemer valid dan transaksi disetujui user
 test scenario_3() {
   let datum =
     Datum { owner: #"00000000000000000000000000000000000000000000000000000000" }
   let redeemer = Redeemer { msg: "17925" }
   let placeholder_utxo = OutputReference { transaction_id: "", output_index: 0 }
-  hello_world.spend(
+  marketplace.spend(
     Some(datum),
     redeemer,
     placeholder_utxo,

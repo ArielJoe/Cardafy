@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Separator } from "./ui/separator";
+import { Separator } from "../ui/separator";
 import { Gem, Info, ShoppingCart } from "lucide-react";
 import { useWallet } from "@meshsdk/react";
 import {
@@ -21,7 +21,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "./ui/sheet";
+} from "../ui/sheet";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -32,6 +32,7 @@ import {
   logout,
 } from "@/lib/auth";
 import { getCartByAddress } from "@/lib/cart";
+import { debounce } from "lodash";
 
 const links = [
   { id: 0, title: "Membership", url: "", icon: <Gem size={20} /> },
@@ -68,34 +69,42 @@ export default function AppSidebar() {
   const [cartCount, setCartCount] = useState(0);
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchWalletData = async () => {
-      const selectedWalletString = getWallet();
-      if (selectedWalletString) {
+  const debouncedFetchWalletData = debounce(async () => {
+    const selectedWalletString = getWallet();
+
+    if (selectedWalletString) {
+      try {
         const selectedWallet = JSON.parse(selectedWalletString);
         await connect(selectedWallet.name);
 
-        if (wallet && walletAddress === "") {
-          try {
-            const addr = await wallet.getChangeAddress();
-            setWalletAddress(addr);
-            const lovelace = await wallet.getLovelace();
-            setAdaBalance(parseInt(lovelace) / 1000000);
-            const net = await wallet.getNetworkId();
-            setNetwork(
-              net === 1 ? "Mainnet" : net === 0 ? "Testnet" : "Offline"
-            );
-            const items = await getCartByAddress(addr);
-            setCartCount(items.length);
-          } catch (error) {
-            console.log(error);
-          }
-        }
-      }
-    };
+        if (
+          wallet &&
+          typeof wallet.getChangeAddress === "function" &&
+          walletAddress === ""
+        ) {
+          const addr = await wallet.getChangeAddress();
+          setWalletAddress(addr);
 
-    fetchWalletData();
-  }, [wallet]);
+          const lovelace = await wallet.getLovelace();
+          setAdaBalance(parseInt(lovelace) / 1000000);
+
+          const net = await wallet.getNetworkId();
+          setNetwork(net === 1 ? "Mainnet" : net === 0 ? "Testnet" : "Offline");
+
+          const items = await getCartByAddress(addr);
+          setCartCount(items.length);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }, 50);
+
+  useEffect(() => {
+    debouncedFetchWalletData();
+
+    return () => debouncedFetchWalletData.cancel();
+  }, [wallet, connect]);
 
   useEffect(() => {
     const fetchMembershipStatus = () => {
@@ -117,7 +126,9 @@ export default function AppSidebar() {
       <SidebarContent className="dark:bg-[#020817] light:bg-white">
         <SidebarGroup>
           <SidebarGroupLabel className="w-full mt-2 text-black text-3xl font-bold light:text-black dark:text-white">
-            <Link href={"/"}>Cardafy</Link>
+            <Link href={"/"} className="text-primary">
+              Cardafy
+            </Link>
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="py-4">
@@ -148,7 +159,7 @@ export default function AppSidebar() {
                     >
                       {link.icon}{" "}
                       {link.id === 4 ? (
-                        <span className="absolute right-5 text-white text-sm size-8 bg-primary rounded-full flex items-center justify-center">
+                        <span className="absolute right-5 text-white font-semibold text-sm size-8 bg-primary rounded-full flex items-center justify-center">
                           {cartCount}
                         </span>
                       ) : (
@@ -167,7 +178,7 @@ export default function AppSidebar() {
         <div className="p-2">
           <div className="flex justify-end gap-3 w-full">
             <button
-              className="border border-red-500 rounded-sm hover:bg-red-500 hover:text-white p-1 flex-grow h-10"
+              className="border border-red-500 rounded-sm hover:bg-red-500 hover:text-white p-1 flex-grow h-10 font-semibold"
               onClick={() => {
                 handleDisconnect();
                 router.push("/login");

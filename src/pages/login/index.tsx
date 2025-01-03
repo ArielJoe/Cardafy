@@ -26,7 +26,7 @@ export default function Login() {
         </Button>
         <div className="grid gap-3 border p-4 rounded-md">
           <h1 className="text-3xl text-center border-b border-white pb-3">
-            Welcome to <span className="font-bold">Cardafy</span>!
+            Welcome to <span className="font-bold text-primary">Cardafy</span>!
           </h1>
           <ConnectWallet />
         </div>

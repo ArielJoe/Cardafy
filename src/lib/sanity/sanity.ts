@@ -7,6 +7,7 @@ export const client = createClient({
   token: process.env.NEXT_PUBLIC_SANITY_API_TOKEN,
   apiVersion: "2024-01-01",
   useCdn: false,
+  ignoreBrowserTokenWarning: true,
 });
 
 const builder = imageUrlBuilder(client);

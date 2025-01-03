@@ -62,9 +62,9 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ membershipType }) => {
     if (selectedWalletString) {
       const selectedWallet = JSON.parse(selectedWalletString);
 
-      if (wallet) {
-        await connect(selectedWallet.name);
+      if (wallet && typeof wallet.getChangeAddress === "function") {
         try {
+          await connect(selectedWallet.name);
           const addr = await wallet.getChangeAddress();
           setWalletAddress(addr);
         } catch (error) {
@@ -158,7 +158,7 @@ const ItemDetail: React.FC<ItemDetailProps> = ({ membershipType }) => {
           <div className="grid gap-2">
             <div className="prose-blue prose-lg dark:prose-invert prose-li:marker:text-primary prose-a:text-primary">
               <PortableText value={slugData.content} />
-            </div>{" "}
+            </div>
             <div className="text-lg font-bold">
               ₳&nbsp;&nbsp;
               {slugData.price}

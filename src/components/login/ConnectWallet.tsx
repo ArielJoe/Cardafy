@@ -102,7 +102,6 @@ const ConnectWallet = () => {
     try {
       if (wallet) {
         const _assets = await wallet.getAssets();
-        console.log("ASSETS:", _assets);
 
         const filteredAsset: any = _assets.filter(
           (asset: { assetName: string; policyId: string }) =>
@@ -207,7 +206,7 @@ const ConnectWallet = () => {
                   router.push("/merchant");
                 }}
               >
-                <p className="text-white">Sign in as Merchant</p>
+                <p className="text-white font-semibold">Sign in as Merchant</p>
               </button>
             ) : (
               assetsList.map((asset, index) => (
@@ -242,7 +241,7 @@ const ConnectWallet = () => {
               ))
             )}
             <button
-              className="border border-red-500 rounded-sm hover:bg-red-500 hover:text-white p-1"
+              className="border border-red-500 rounded-sm hover:bg-red-500 hover:text-white p-1 font-semibold"
               onClick={handleDisconnect}
             >
               Sign out
