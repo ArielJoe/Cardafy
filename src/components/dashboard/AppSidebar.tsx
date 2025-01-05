@@ -31,7 +31,7 @@ import {
   getWallet,
   logout,
 } from "@/lib/auth";
-import { getCartByAddress } from "@/lib/cart";
+import { getCartByAddress } from "@/lib/prisma/cart";
 import { debounce } from "lodash";
 
 const links = [

@@ -21,14 +21,20 @@ import {
   Asset,
 } from "@meshsdk/core";
 import { applyParamsToScript } from "@meshsdk/core-csl";
-import contractBlueprint from "../../../aiken-workspace/plutus.json";
+import contractBlueprint from "../../../smart-contracts/plutus.json";
 import { useWallet } from "@meshsdk/react";
 import { toast } from "@/hooks/use-toast";
+import { deleteCartById } from "@/lib/prisma/cart";
+import { addToTransaction } from "@/lib/prisma/transaction";
+import { format } from "date-fns";
+import { useRouter } from "next/router";
 
 interface CheckOutProps {
   walletAddress: string;
+  cart_id: number;
   qty: number;
   price: number;
+  item_name: string;
 }
 
 interface FormErrors {
@@ -36,35 +42,41 @@ interface FormErrors {
   address?: string;
 }
 
-const blockfrostApiKey = process.env.NEXT_PUBLIC_BLOCKFROST_API_KEY;
-const nodeProvider = new BlockfrostProvider(blockfrostApiKey!);
+const scriptCbor = applyParamsToScript(
+  contractBlueprint.validators[0].compiledCode,
+  []
+);
 
-const CheckOut: React.FC<CheckOutProps> = ({ qty, price }) => {
+const contractAddress = serializePlutusScript(
+  { code: scriptCbor, version: "V3" },
+  undefined,
+  0
+).address;
+
+const blockfrostApiKey = process.env.NEXT_PUBLIC_BLOCKFROST_API_KEY;
+const merchantAddress = process.env.NEXT_PUBLIC_MERCHANT_ADDRESS;
+
+const nodeProvider = new BlockfrostProvider(blockfrostApiKey!);
+const signerHash = deserializeAddress(merchantAddress!).pubKeyHash;
+
+const CheckOut: React.FC<CheckOutProps> = ({
+  cart_id,
+  qty,
+  price,
+  item_name,
+}) => {
   const [name, setName] = useState("");
   const [address, setAddress] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { wallet } = useWallet();
-
-  function getScript(
-    blueprintCompiledCode: string,
-    params: string[] = [],
-    version: "V1" | "V2" | "V3" = "V3"
-  ) {
-    const scriptCbor = applyParamsToScript(blueprintCompiledCode, params);
-    const scriptAddr = serializePlutusScript(
-      { code: scriptCbor, version: version },
-      undefined,
-      0
-    ).address;
-    return { scriptCbor, scriptAddr };
-  }
+  const router = useRouter();
 
   async function getWalletInfo() {
-    const utxos = await wallet.getUtxos();
-    const collateral = (await wallet.getCollateral())[0];
     const walletAddress = await wallet.getChangeAddress();
-    return { utxos, collateral, walletAddress };
+    const utxos = await wallet.getUtxos();
+
+    return { walletAddress, utxos };
   }
 
   async function txHandler(
@@ -79,31 +91,34 @@ const CheckOut: React.FC<CheckOutProps> = ({ qty, price }) => {
     }
 
     try {
-      const { scriptAddr } = getScript(
-        contractBlueprint.validators[0].compiledCode
-      );
-      const { utxos, walletAddress } = await getWalletInfo();
-      const signerHash = deserializeAddress(walletAddress).pubKeyHash;
-      const lovelaceAmount = ((price * quantity + 20) * 1000000).toString();
+      const totalPrice = price * quantity + 20;
+
+      const lovelaceAmount = (totalPrice * 1000000).toString();
       const assets: Asset[] = [{ unit: "lovelace", quantity: lovelaceAmount }];
+
+      const { walletAddress, utxos } = await getWalletInfo();
 
       const txBuild = new MeshTxBuilder({
         fetcher: nodeProvider,
-        evaluator: nodeProvider,
+        submitter: nodeProvider,
         verbose: true,
       });
 
       const txDraft = await txBuild
-        .setNetwork("preprod")
-        .txOut(scriptAddr, assets)
+        .txOut(contractAddress, assets)
         .txOutDatumHashValue(mConStr0([signerHash]))
         .changeAddress(walletAddress)
         .selectUtxosFrom(utxos)
         .complete();
 
-      const signedTx = await wallet.signTx(txDraft);
-      const txHash = await wallet.submitTx(signedTx);
+      let signedTx;
+      try {
+        signedTx = await wallet.signTx(txDraft);
+      } catch (error) {
+        return;
+      }
 
+      const txHash = await wallet.submitTx(signedTx);
       toast({
         title: "Transaction Success",
         description: (
@@ -115,10 +130,21 @@ const CheckOut: React.FC<CheckOutProps> = ({ qty, price }) => {
         className: "bg-green-900 text-white",
       });
 
+      await deleteCartById(cart_id);
+      await addToTransaction({
+        tx_id: txHash,
+        name: name,
+        address: address,
+        item_name: item_name,
+        qty: qty,
+        price: price,
+        date_ordered: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+        status: "Pending",
+      });
       setIsDialogOpen(false);
       setName("");
       setAddress("");
-      return;
+      router.push("/membership/cart");
     } catch (error) {
       toast({
         title: "Transaction Failed",

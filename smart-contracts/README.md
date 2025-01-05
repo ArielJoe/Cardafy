@@ -1,4 +1,4 @@
-# aiken-hello-world
+# smart-contracts
 
 Write validators in the `validators` folder, and supporting functions in the `lib` folder using `.ak` as a file extension.
 

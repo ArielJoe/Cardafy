@@ -24,3 +24,22 @@ model Cart {
   membership String
   slug       String
 }
+
+model Transaction {
+  id           Int               @id @default(autoincrement())
+  tx_id        String            @unique
+  name         String
+  address      String
+  item_name    String
+  qty          Int
+  price        Int
+  date_ordered DateTime
+  status       TransactionStatus
+}
+
+enum TransactionStatus {
+  Pending
+  Delivered
+  Completed
+  Canceled
+}

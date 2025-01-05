@@ -65,7 +65,7 @@ export default function Chatbot() {
       <PopoverContent className="w-[300px] sm:w-[500px] m-5 p-0 rounded-none">
         <Card className="rounded-none">
           <CardHeader className="flex flex-row items-center justify-between pt-3">
-            <CardTitle className="text-lg font-bold">Ask Our AI</CardTitle>
+            <CardTitle className="text-xl font-bold">Ask Our AI</CardTitle>
             <Button
               onClick={toggleChat}
               size="sm"

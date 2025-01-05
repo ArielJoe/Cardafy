@@ -3,10 +3,10 @@
 import Navbar from "@/components/Navbar";
 import MembershipLayout from "../layout";
 import { useEffect, useState } from "react";
-import { deleteCartById, getCartByAddress } from "@/lib/cart";
+import { deleteCartById, getCartByAddress } from "@/lib/prisma/cart";
 import { getWallet } from "@/lib/auth";
 import { useWallet } from "@meshsdk/react";
-import { CartData } from "@/lib/cart";
+import { CartData } from "@/lib/prisma/cart";
 import CartImage from "@/components/cart/CartImage";
 import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -120,8 +120,10 @@ export default function Cart() {
                     </Link>
                     <CheckOut
                       walletAddress={walletAddress}
+                      cart_id={data.id}
                       qty={data.qty}
                       price={data.price}
+                      item_name={data.title}
                     />
                   </div>
                 </div>

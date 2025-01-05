@@ -229,7 +229,7 @@ const MembershipPage: React.FC<MembershipPageProps> = ({ membershipType }) => {
                     <Button className="p-0">
                       <Link
                         href={`/membership/${membershipType}/${item.slug}`}
-                        className="text-white flex justify-center items-center w-full h-full"
+                        className="text-white flex justify-center items-center w-full h-full font-semibold"
                       >
                         See Details
                       </Link>

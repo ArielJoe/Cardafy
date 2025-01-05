@@ -8,7 +8,7 @@ export const initialMessage = {
         3. Q : Can I track my shipping progress?
            A : No, shipping progress tracking is not available at this time.
 
-        Answer user queries about Cardafy's FAQ. Do not answer questions unrelated to Cardafy. If a question is outside this scope, respond with: "I'm sorry, I can't answer that question."
+        Answer user queries about these related questions. Do not answer questions unrelated to these questions. If a question is outside this scope, respond with: "I'm sorry, I can't answer that question."
 
   `,
 };

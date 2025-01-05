@@ -12,10 +12,9 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { addToCart } from "@/lib/cart";
+import { addToCart } from "@/lib/prisma/cart";
 import { useWallet } from "@meshsdk/react";
 import { getWallet } from "@/lib/auth";
-import { connected } from "process";
 
 interface ItemDetailProps {
   membershipType: "gold" | "silver" | "platinum";

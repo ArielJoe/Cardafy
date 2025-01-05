@@ -8,7 +8,6 @@ import {
   deserializeAddress,
   serializePlutusScript,
   mConStr0,
-  stringToHex,
   MeshTxBuilder,
   Asset,
 } from "@meshsdk/core";
@@ -33,9 +32,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import cbor from "cbor";
 
-import contractBlueprint from "../../aiken-workspace/plutus.json";
+import contractBlueprint from "../../smart-contracts/plutus.json";
+import {
+  getTransaction,
+  TransactionData,
+  updateTransactionStatus,
+} from "@/lib/prisma/transaction";
 
 const scriptCbor = applyParamsToScript(
   contractBlueprint.validators[0].compiledCode,
@@ -49,83 +52,63 @@ const contractAddress = serializePlutusScript(
 ).address;
 
 const blockfrostApiKey = process.env.NEXT_PUBLIC_BLOCKFROST_API_KEY;
-
 const nodeProvider = new BlockfrostProvider(blockfrostApiKey!);
-
-const refNumber = "17925";
-
-const timeout = 30000;
 
 export default function OnChain() {
   const { connected, wallet } = useWallet();
   const [loading, setLoading] = useState(true);
   const [utxoList, setUtxoList] = useState<UTxO[]>([]);
+  const [transactions, setTransactions] = useState<TransactionData[]>([]);
   const [totalLockedAda, setTotalLockedAda] = useState<number>(0);
-  const [datumInfo, setDatumInfo] = useState<{ [key: string]: any }>({});
+  const [processingTx, setProcessingTx] = useState<string | null>(null);
 
   useEffect(() => {
-    setUtxoList([]);
-    if (connected) {
-      getUtxosListContractAddr();
-    }
+    const fetchTransaction = async () => {
+      setLoading(true);
+      setUtxoList([]);
+      if (connected) {
+        try {
+          const ts = await getTransaction();
+          setTransactions(ts);
+          await getUtxosListContractAddr(ts);
+        } catch (error) {
+          console.log(error);
+        } finally {
+          setLoading(false);
+        }
+      } else {
+        setLoading(false);
+      }
+    };
+
+    fetchTransaction();
   }, [connected]);
 
-  async function getUtxosListContractAddr() {
-    const utxos: UTxO[] = await nodeProvider.fetchAddressUTxOs(contractAddress);
-    setUtxoList(utxos);
+  const filterUtxosByTransactions = (
+    utxos: UTxO[],
+    transactions: TransactionData[]
+  ) => {
+    const transactionIds = transactions
+      .filter((tx) => tx.status !== "Completed")
+      .map((tx) => tx.tx_id);
+    return utxos.filter((utxo) => transactionIds.includes(utxo.input.txHash));
+  };
 
-    let totalLockedAda = 0;
-    utxos.forEach((utxo) => {
-      totalLockedAda += Number(utxo.output.amount[0].quantity) / 1_000_000;
-    });
-
-    setTotalLockedAda(totalLockedAda);
-
-    const datumInfoMap: { [key: string]: any } = {};
-    for (const utxo of utxos) {
-      if (utxo.output.dataHash) {
-        const datum = await fetchDatumFromBlockfrost(utxo.output.dataHash);
-        if (datum) {
-          const parsedDatum = decodeDatumCbor(datum);
-          datumInfoMap[utxo.input.txHash] = parsedDatum;
-        }
-      }
-    }
-    setDatumInfo(datumInfoMap);
-  }
-
-  async function fetchDatumFromBlockfrost(
-    datumHash: string
-  ): Promise<string | null> {
+  async function getUtxosListContractAddr(transactions: TransactionData[]) {
     try {
-      const response = await fetch(
-        `https://cardano-mainnet.blockfrost.io/api/v0/scripts/datum/${datumHash}`,
-        {
-          headers: {
-            project_id: blockfrostApiKey!,
-          },
-        }
-      );
+      const utxos: UTxO[] =
+        await nodeProvider.fetchAddressUTxOs(contractAddress);
+      const filteredUtxos = filterUtxosByTransactions(utxos, transactions);
+      setUtxoList(filteredUtxos);
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch datum: ${response.statusText}`);
-      }
+      let totalLockedAda = 0;
+      filteredUtxos.forEach((utxo) => {
+        totalLockedAda += Number(utxo.output.amount[0].quantity) / 1_000_000;
+      });
 
-      const data = await response.json();
-      return data.cbor;
+      setTotalLockedAda(totalLockedAda);
     } catch (error) {
       console.log(error);
-      return null;
-    }
-  }
-
-  function decodeDatumCbor(datumCbor: string): any {
-    try {
-      const decoded = cbor.decodeFirstSync(Buffer.from(datumCbor, "hex"));
-      return decoded;
-    } catch (error) {
-      console.log("Error decoding datum CBOR:", error);
-      return null;
     }
   }
 
@@ -133,64 +116,31 @@ export default function OnChain() {
     const walletAddress = await wallet.getChangeAddress();
     const utxos = await wallet.getUtxos();
     const collateral = (await wallet.getCollateral())[0];
+
     return { walletAddress, utxos, collateral };
   }
 
-  async function handleTx(
-    txHash: string,
-    index: number,
-    amount: Asset[],
-    address: string
-  ) {
+  async function handleOrderCompleted(txId: string) {
+    setProcessingTx(txId);
     try {
-      const { walletAddress, utxos, collateral } = await getWalletInfo();
-
-      const signerHash = deserializeAddress(walletAddress).pubKeyHash;
-
-      const txBuild = new MeshTxBuilder({
-        fetcher: nodeProvider,
-        submitter: nodeProvider,
-      });
-      const txDraft = await txBuild
-        .spendingPlutusScript("V3")
-        .txIn(txHash, index, amount, address)
-        .txInScript(scriptCbor)
-        .txInRedeemerValue(mConStr0([stringToHex(refNumber)]))
-        .txInDatumValue(mConStr0([signerHash]))
-        .requiredSignerHash(signerHash)
-        .changeAddress(walletAddress)
-        .txInCollateral(
-          collateral.input.txHash,
-          collateral.input.outputIndex,
-          collateral.output.amount,
-          collateral.output.address
+      const updatedTransaction = await updateTransactionStatus(txId);
+      setTransactions((prevTransactions) =>
+        prevTransactions.map((tx) =>
+          tx.tx_id === txId ? { ...tx, status: "Completed" } : tx
         )
-        .selectUtxosFrom(utxos)
-        .complete();
-
-      let signedTx;
-      try {
-        signedTx = await wallet.signTx(txDraft);
-      } catch (error) {
-        return;
-      }
-
-      const txHash_ = await wallet.submitTx(signedTx);
-      setLoading(false);
-      setUtxoList([]);
-
-      setTimeout(() => {
-        alert(`Transaction successful : ${txHash_}`);
-        getUtxosListContractAddr();
-        setLoading(true);
-      }, timeout);
-
-      return;
+      );
+      setUtxoList((prevUtxos) =>
+        prevUtxos.filter((utxo) => utxo.input.txHash !== txId)
+      );
+      await getUtxosListContractAddr(transactions);
     } catch (error) {
-      alert(`Transaction failed ${error}`);
-      return;
+      console.log(error);
+    } finally {
+      setProcessingTx(null);
     }
   }
+
+  const filteredUtxos = filterUtxosByTransactions(utxoList, transactions);
 
   return (
     <div className="flex-col justify-center items-center">
@@ -221,24 +171,40 @@ export default function OnChain() {
 
           {connected && (
             <div className="flex justify-center items-center">
-              {utxoList.length === 0 && !loading && (
+              {loading ? (
                 <Loader2 className="animate-spin" size={40} />
-              )}
-              {utxoList.length === 0 && loading && (
+              ) : filteredUtxos.length === 0 ? (
                 <p className="text-xl">No Transactions</p>
-              )}
-              {utxoList.length > 0 && loading && (
+              ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-secondary-foreground font-bold">
-                        Transaction ID
+                        Name
                       </TableHead>
                       <TableHead className="text-secondary-foreground font-bold">
-                        Revenue
+                        Address
                       </TableHead>
                       <TableHead className="text-secondary-foreground font-bold">
-                        Datum Info
+                        Item
+                      </TableHead>
+                      <TableHead className="text-secondary-foreground font-bold">
+                        Qty
+                      </TableHead>
+                      <TableHead className="text-secondary-foreground font-bold">
+                        Price
+                      </TableHead>
+                      <TableHead className="text-secondary-foreground font-bold">
+                        Shipment Fee
+                      </TableHead>
+                      <TableHead className="text-secondary-foreground font-bold">
+                        Total
+                      </TableHead>
+                      <TableHead className="text-secondary-foreground font-bold">
+                        Date Ordered
+                      </TableHead>
+                      <TableHead className="text-secondary-foreground font-bold">
+                        Status
                       </TableHead>
                       <TableHead className="text-secondary-foreground font-bold">
                         Action
@@ -246,35 +212,54 @@ export default function OnChain() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {utxoList.map((utxo, index) => (
-                      <TableRow key={index}>
-                        <TableCell>{utxo.input.txHash}</TableCell>
-                        <TableCell>
-                          ₳&nbsp;&nbsp;
-                          {Number(utxo.output.amount[0].quantity) / 1_000_000}
-                        </TableCell>
-                        <TableCell>
-                          {datumInfo[utxo.input.txHash]
-                            ? JSON.stringify(datumInfo[utxo.input.txHash])
-                            : "No Datum"}
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            className="bg-primary text-white text-sm font-bold p-2 rounded"
-                            onClick={() =>
-                              handleTx(
-                                utxo.input.txHash,
-                                utxo.input.outputIndex,
-                                utxo.output.amount,
-                                utxo.output.address
-                              )
-                            }
-                          >
-                            Withdraw
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                    {filteredUtxos.map((utxo, index) => {
+                      const transaction = transactions.find(
+                        (tx) => tx.tx_id === utxo.input.txHash
+                      );
+                      return (
+                        <TableRow key={index}>
+                          <TableCell>{transaction?.name}</TableCell>
+                          <TableCell>{transaction?.address}</TableCell>
+                          <TableCell>{transaction?.item_name}</TableCell>
+                          <TableCell>{transaction?.qty}</TableCell>
+                          <TableCell>
+                            ₳&nbsp;&nbsp;{transaction?.price}
+                          </TableCell>
+                          <TableCell>₳&nbsp;&nbsp;{20}</TableCell>
+                          <TableCell>
+                            ₳&nbsp;&nbsp;
+                            {transaction?.qty! * transaction?.price! + 20}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(
+                              transaction?.date_ordered!
+                            ).toDateString()}
+                          </TableCell>
+                          <TableCell>{transaction?.status}</TableCell>
+                          <TableCell>
+                            {transaction?.status === "Pending" && (
+                              <p>Waiting for Merchant confirmation...</p>
+                            )}
+                            {transaction?.status === "Delivered" && (
+                              <Button
+                                className="bg-primary text-white text-sm font-bold p-2 rounded"
+                                onClick={async () =>
+                                  await handleOrderCompleted(transaction?.tx_id)
+                                }
+                                disabled={processingTx === transaction?.tx_id}
+                              >
+                                {processingTx === transaction?.tx_id ? (
+                                  <Loader2 className="animate-spin" size={20} />
+                                ) : (
+                                  "Order Completed"
+                                )}
+                              </Button>
+                            )}
+                            {transaction?.status === "Completed" && <p>-</p>}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               )}
