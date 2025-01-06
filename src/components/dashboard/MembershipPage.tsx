@@ -248,29 +248,31 @@ const MembershipPage: React.FC<MembershipPageProps> = ({ membershipType }) => {
             </div>
           )}
         </div>
-        {paginatedItems.length !== 0 && (
-          <div className="flex justify-center items-center gap-4">
-            <Button
-              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              className="border size-10 rounded-md"
-            >
-              <ChevronLeft color="white" />
-            </Button>
-            <span>
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-              }
-              disabled={currentPage === totalPages}
-              className="border size-10 rounded-md"
-            >
-              <ChevronRight color="white" />
-            </Button>
-          </div>
-        )}
+        <div>
+          {paginatedItems.length !== 0 && (
+            <div className="flex justify-center items-center gap-4 z-20">
+              <Button
+                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="border size-10 rounded-md"
+              >
+                <ChevronLeft color="white" />
+              </Button>
+              <span>
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                onClick={() =>
+                  setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className="border size-10 rounded-md"
+              >
+                <ChevronRight color="white" />
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
     </MembershipLayout>
   );

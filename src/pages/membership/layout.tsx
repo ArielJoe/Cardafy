@@ -13,7 +13,7 @@ export default function MembershipLayout({
   return (
     <div>
       <div className="fixed bottom-5 right-5">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 z-50">
           <OnChain />
           <ModeToggle />
           <Chatbot />
