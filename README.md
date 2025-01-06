@@ -15,6 +15,10 @@ Cardafy is a semi-blockchain marketplace with crypto wallet based login.
 * [Lucide](https://lucide.dev)
 * [Shadcn/ui](https://ui.shadcn.com)
 
+## Features
+* CMS
+* AI Chatbot
+
 ## Usage
 ```bash
 git clone https://github.com/ArielJoe/Cardafy.git
@@ -59,3 +63,6 @@ NEXT_PUBLIC_TOKEN_SILVER_SECRET_KEY=
 DATABASE_URL=
 DIRECT_URL=
 ```
+
+## Demo Video
+https://drive.google.com/drive/folders/10Mb1wPuwntRSbJncmG_K_rKuo2axj3SD?usp=sharing
