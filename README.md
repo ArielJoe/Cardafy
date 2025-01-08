@@ -14,6 +14,7 @@ Cardafy is a semi-blockchain marketplace with crypto wallet based login.
 * [Aiken](https://aiken-lang.org)
 * [Lucide](https://lucide.dev)
 * [Shadcn/ui](https://ui.shadcn.com)
+* [Zod](https://zod.dev)
 
 ## Features
 * CMS
